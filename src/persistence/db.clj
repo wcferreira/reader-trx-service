@@ -1,24 +1,30 @@
 (ns persistence.db
-  (:require [datomic.api :as d]))
+  (:require [datomic.api :as d]
+            [hodur-engine.core :as hodur]
+            [hodur-datomic-schema.core :as hodur-datomic]))
 
 (def db-uri "datomic:dev://localhost:4334/transactions")
 
-(def schema [{:db/ident :transaction/id
-              :db/valueType :db.type/string
-              :db/cardinality :db.cardinality/one
-              :db/doc "Transaction ID"}
-             {:db/ident :transaction/merchant
-              :db/valueType :db.type/string
-              :db/cardinality :db.cardinality/one
-              :db/doc "Transaction Merchant"}
-             {:db/ident :transaction/cnpj
-              :db/valueType :db.type/string
-              :db/cardinality :db.cardinality/one
-              :db/doc "Transaction CNPJ"}
-             {:db/ident :transaction/price
-              :db/valueType :db.type/bigdec
-              :db/cardinality :db.cardinality/one
-              :db/doc "Transaction Price"}])
+(def trx-meta-db (hodur/init-schema
+                   '[^{:datomic/tag-recursive true}
+                     Transaction
+                     [^{:type String
+                        :doc "Transaction ID"}
+                     id
+
+                     ^{:type String
+                       :doc "Transaction Merchant"}
+                     merchant
+
+                     ^{:type String
+                       :doc "Merchant CNPJ"}
+                     cnpj
+
+                     ^{:datomic/type :db.type/bigdec
+                       :doc "Transaction Price"}
+                     price]]))
+
+(def schema (hodur-datomic/schema trx-meta-db))
 
 (defn new-transaction [id merchant cnpj price]
   {:transaction/id id
